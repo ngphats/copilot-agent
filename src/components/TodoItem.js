@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const TodoItem = ({ todo, onToggle, onDelete, onUpdate }) => {
+const TodoItem = ({ todo, onToggle, onDelete, onUpdate, onUpdateReminder }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(todo.text);
+  const [isEditingReminder, setIsEditingReminder] = useState(false);
+  const [editReminderValue, setEditReminderValue] = useState(
+    todo.reminderTime ? new Date(todo.reminderTime).toISOString().slice(0, 16) : ''
+  );
   const inputRef = useRef(null);
 
   // Focus input khi bắt đầu edit
@@ -28,6 +32,44 @@ const TodoItem = ({ todo, onToggle, onDelete, onUpdate }) => {
   const handleCancel = () => {
     setEditValue(todo.text);
     setIsEditing(false);
+  };
+
+  const handleEditReminder = () => {
+    setIsEditingReminder(true);
+    setEditReminderValue(
+      todo.reminderTime ? new Date(todo.reminderTime).toISOString().slice(0, 16) : ''
+    );
+  };
+
+  const handleSaveReminder = () => {
+    const reminderTime = editReminderValue || null;
+    onUpdateReminder(todo.id, reminderTime);
+    setIsEditingReminder(false);
+  };
+
+  const handleCancelReminder = () => {
+    setEditReminderValue(
+      todo.reminderTime ? new Date(todo.reminderTime).toISOString().slice(0, 16) : ''
+    );
+    setIsEditingReminder(false);
+  };
+
+  // Tạo giá trị min cho datetime input (hiện tại)
+  const getMinDateTime = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  // Format thời gian hiển thị
+  const formatReminderTime = (reminderTime) => {
+    if (!reminderTime) return '';
+    const date = new Date(reminderTime);
+    return date.toLocaleString('vi-VN');
   };
 
   const handleKeyPress = (e) => {
@@ -59,19 +101,71 @@ const TodoItem = ({ todo, onToggle, onDelete, onUpdate }) => {
             className="flex-1 px-2 py-1 border rounded focus:outline-none focus:border-primary-500"
           />
         ) : (
-          <span
-            className={`flex-1 cursor-pointer ${
-              todo.completed ? 'line-through text-gray-500' : ''
-            }`}
-            onDoubleClick={handleEdit}
-          >
-            {todo.text}
-          </span>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span
+                className={`cursor-pointer ${
+                  todo.completed ? 'line-through text-gray-500' : ''
+                }`}
+                onDoubleClick={handleEdit}
+              >
+                {todo.text}
+              </span>
+              {todo.reminderTime && (
+                <span 
+                  className="text-primary-600 cursor-pointer" 
+                  title={`Nhắc nhở: ${formatReminderTime(todo.reminderTime)}`}
+                  onClick={handleEditReminder}
+                >
+                  🔔
+                </span>
+              )}
+            </div>
+            
+            {/* Hiển thị thời gian reminder nếu có */}
+            {todo.reminderTime && (
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                ⏰ {formatReminderTime(todo.reminderTime)}
+              </div>
+            )}
+
+            {/* Inline editing cho reminder */}
+            {isEditingReminder && (
+              <div className="mt-2 p-2 border rounded bg-gray-50 dark:bg-gray-700">
+                <div className="flex gap-2 items-center">
+                  <label className="text-sm text-gray-600 dark:text-gray-400">
+                    🔔 Nhắc nhở:
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={editReminderValue}
+                    onChange={(e) => setEditReminderValue(e.target.value)}
+                    min={getMinDateTime()}
+                    className="todo-input flex-1 text-sm"
+                  />
+                  <button
+                    onClick={handleSaveReminder}
+                    className="todo-button-secondary text-sm hover:bg-green-200 hover:text-green-700"
+                    title="Lưu"
+                  >
+                    ✅
+                  </button>
+                  <button
+                    onClick={handleCancelReminder}
+                    className="todo-button-secondary text-sm hover:bg-red-200 hover:text-red-700"
+                    title="Hủy"
+                  >
+                    ❌
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
       
       <div className="flex gap-2">
-        {!isEditing && (
+        {!isEditing && !isEditingReminder && (
           <>
             <button
               onClick={handleEdit}
@@ -79,6 +173,13 @@ const TodoItem = ({ todo, onToggle, onDelete, onUpdate }) => {
               title="Chỉnh sửa (double-click)"
             >
               ✏️
+            </button>
+            <button
+              onClick={handleEditReminder}
+              className="todo-button-secondary text-sm"
+              title="Thiết lập nhắc nhở"
+            >
+              🔔
             </button>
             <button
               onClick={() => onDelete(todo.id)}

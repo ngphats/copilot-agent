@@ -1,7 +1,7 @@
 import React from 'react';
 import TodoItem from './TodoItem';
 
-const TodoList = ({ todos, onToggle, onDelete, onUpdate }) => {
+const TodoList = ({ todos, onToggle, onDelete, onUpdate, onUpdateReminder }) => {
   if (todos.length === 0) {
     return (
       <div className="text-center py-12">
@@ -25,6 +25,7 @@ const TodoList = ({ todos, onToggle, onDelete, onUpdate }) => {
           onToggle={onToggle}
           onDelete={onDelete}
           onUpdate={onUpdate}
+          onUpdateReminder={onUpdateReminder}
         />
       ))}
     </div>

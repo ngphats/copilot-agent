@@ -8,7 +8,7 @@ import TodoFilter from './components/TodoFilter';
 import TodoList from './components/TodoList';
 
 function App() {
-  const { todos, addTodo, deleteTodo, toggleTodo, updateTodo, clearCompleted } = useTodos();
+  const { todos, addTodo, deleteTodo, toggleTodo, updateTodo, updateTodoReminder, clearCompleted } = useTodos();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   
   const [filter, setFilter] = useState('all');
@@ -76,6 +76,7 @@ function App() {
             onToggle={toggleTodo}
             onDelete={deleteTodo}
             onUpdate={updateTodo}
+            onUpdateReminder={updateTodoReminder}
           />
         </div>
         
