@@ -54,9 +54,21 @@ export const useTodos = () => {
   // Toggle trạng thái hoàn thành
   const toggleTodo = (id) => {
     setTodos(prevTodos =>
-      prevTodos.map(todo =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
+      prevTodos.map(todo => {
+        if (todo.id === id) {
+          const updatedTodo = { ...todo, completed: !todo.completed };
+          // Xử lý reminder khi toggle completed
+          if (updatedTodo.completed) {
+            // Xóa reminder khi task được hoàn thành
+            removeReminder(id);
+          } else if (updatedTodo.reminderTime) {
+            // Khôi phục reminder khi task được uncomplete
+            updateReminder(id, updatedTodo.reminderTime, updatedTodo.text);
+          }
+          return updatedTodo;
+        }
+        return todo;
+      })
     );
   };
 

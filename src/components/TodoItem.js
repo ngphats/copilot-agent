@@ -43,6 +43,18 @@ const TodoItem = ({ todo, onToggle, onDelete, onUpdate, onUpdateReminder }) => {
 
   const handleSaveReminder = () => {
     const reminderTime = editReminderValue || null;
+    
+    // Validate reminder time if provided
+    if (reminderTime) {
+      const reminderDate = new Date(reminderTime);
+      const now = new Date();
+      
+      if (reminderDate <= now) {
+        alert('Thời gian nhắc nhở phải là thời điểm trong tương lai!');
+        return;
+      }
+    }
+    
     onUpdateReminder(todo.id, reminderTime);
     setIsEditingReminder(false);
   };

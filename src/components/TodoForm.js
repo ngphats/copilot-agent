@@ -7,7 +7,21 @@ const TodoForm = ({ onAddTodo }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (inputValue.trim()) {
-      onAddTodo(inputValue, reminderTime || null);
+      let validReminderTime = reminderTime || null;
+      
+      // Validate reminder time if provided
+      if (reminderTime) {
+        const reminderDate = new Date(reminderTime);
+        const now = new Date();
+        
+        if (reminderDate <= now) {
+          alert('Thời gian nhắc nhở phải là thời điểm trong tương lai!');
+          return;
+        }
+        validReminderTime = reminderTime;
+      }
+      
+      onAddTodo(inputValue, validReminderTime);
       setInputValue('');
       setReminderTime('');
     }
