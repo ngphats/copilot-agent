@@ -6,9 +6,10 @@ import TodoForm from './components/TodoForm';
 import SearchBar from './components/SearchBar';
 import TodoFilter from './components/TodoFilter';
 import TodoList from './components/TodoList';
+import NotificationStatus from './components/NotificationStatus';
 
 function App() {
-  const { todos, addTodo, deleteTodo, toggleTodo, updateTodo, clearCompleted } = useTodos();
+  const { todos, addTodo, deleteTodo, toggleTodo, updateTodo, updateTodoReminder, clearCompleted } = useTodos();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   
   const [filter, setFilter] = useState('all');
@@ -47,6 +48,7 @@ function App() {
         <Header isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
         
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+          <NotificationStatus />
           <TodoForm onAddTodo={addTodo} />
           
           <SearchBar
@@ -76,6 +78,7 @@ function App() {
             onToggle={toggleTodo}
             onDelete={deleteTodo}
             onUpdate={updateTodo}
+            onUpdateReminder={updateTodoReminder}
           />
         </div>
         

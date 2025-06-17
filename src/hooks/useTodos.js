@@ -1,29 +1,36 @@
 import { useState, useEffect } from 'react';
+import { useReminders } from './useReminders';
 
 // Custom hook để quản lý todos với localStorage
 export const useTodos = () => {
   const [todos, setTodos] = useState([]);
+  const { initializeReminders, updateReminder, removeReminder } = useReminders();
 
   // Load todos từ localStorage khi component mount
   useEffect(() => {
     const savedTodos = localStorage.getItem('todos');
     if (savedTodos) {
       try {
-        setTodos(JSON.parse(savedTodos));
+        const parsedTodos = JSON.parse(savedTodos);
+        setTodos(parsedTodos);
+        // Khởi tạo reminders sau khi load todos
+        initializeReminders(parsedTodos);
       } catch (error) {
         console.error('Error parsing todos from localStorage:', error);
         setTodos([]);
       }
     }
-  }, []);
+  }, [initializeReminders]);
 
   // Lưu todos vào localStorage mỗi khi todos thay đổi
   useEffect(() => {
     localStorage.setItem('todos', JSON.stringify(todos));
-  }, [todos]);
+    // Cập nhật reminders khi todos thay đổi
+    initializeReminders(todos);
+  }, [todos, initializeReminders]);
 
   // Thêm todo mới
-  const addTodo = (text) => {
+  const addTodo = (text, reminderTime = null) => {
     if (text.trim() === '') return;
     
     const newTodo = {
@@ -31,6 +38,7 @@ export const useTodos = () => {
       text: text.trim(),
       completed: false,
       createdAt: new Date().toISOString(),
+      reminderTime: reminderTime
     };
     
     setTodos(prevTodos => [newTodo, ...prevTodos]);
@@ -38,15 +46,29 @@ export const useTodos = () => {
 
   // Xóa todo
   const deleteTodo = (id) => {
+    // Xóa reminder trước khi xóa todo
+    removeReminder(id);
     setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
   };
 
   // Toggle trạng thái hoàn thành
   const toggleTodo = (id) => {
     setTodos(prevTodos =>
-      prevTodos.map(todo =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
+      prevTodos.map(todo => {
+        if (todo.id === id) {
+          const updatedTodo = { ...todo, completed: !todo.completed };
+          // Xử lý reminder khi toggle completed
+          if (updatedTodo.completed) {
+            // Xóa reminder khi task được hoàn thành
+            removeReminder(id);
+          } else if (updatedTodo.reminderTime) {
+            // Khôi phục reminder khi task được uncomplete
+            updateReminder(id, updatedTodo.reminderTime, updatedTodo.text);
+          }
+          return updatedTodo;
+        }
+        return todo;
+      })
     );
   };
 
@@ -55,9 +77,32 @@ export const useTodos = () => {
     if (newText.trim() === '') return;
     
     setTodos(prevTodos =>
-      prevTodos.map(todo =>
-        todo.id === id ? { ...todo, text: newText.trim() } : todo
-      )
+      prevTodos.map(todo => {
+        if (todo.id === id) {
+          const updatedTodo = { ...todo, text: newText.trim() };
+          // Cập nhật reminder với text mới
+          if (updatedTodo.reminderTime) {
+            updateReminder(id, updatedTodo.reminderTime, updatedTodo.text);
+          }
+          return updatedTodo;
+        }
+        return todo;
+      })
+    );
+  };
+
+  // Cập nhật reminder của todo
+  const updateTodoReminder = (id, reminderTime) => {
+    setTodos(prevTodos =>
+      prevTodos.map(todo => {
+        if (todo.id === id) {
+          const updatedTodo = { ...todo, reminderTime };
+          // Cập nhật hoặc xóa reminder
+          updateReminder(id, reminderTime, updatedTodo.text);
+          return updatedTodo;
+        }
+        return todo;
+      })
     );
   };
 
@@ -72,6 +117,7 @@ export const useTodos = () => {
     deleteTodo,
     toggleTodo,
     updateTodo,
+    updateTodoReminder,
     clearCompleted,
   };
 };
